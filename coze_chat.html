@@ -1,0 +1,285 @@
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+    .chat-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(249, 240, 214, 0.72);
+        border-radius: 24px;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid rgba(82, 56, 40, 0.08);
+        overflow: hidden;
+    }
+    .chat-header {
+        background: linear-gradient(135deg, rgba(31, 22, 17, 0.96) 0%, rgba(56, 37, 26, 0.94) 58%, rgba(82, 56, 40, 0.92) 100%);
+        color: var(--champagne);
+        padding: 24px;
+        text-align: center;
+        border-bottom: 1px solid rgba(232, 213, 181, 0.18);
+    }
+    .chat-messages {
+        height: 500px;
+        overflow-y: auto;
+        padding: 24px;
+    }
+    .message {
+        margin-bottom: 15px;
+        max-width: 80%;
+    }
+    .user-message {
+        background: rgba(212, 165, 105, 0.2);
+        border-radius: 12px 12px 0 12px;
+        padding: 12px 16px;
+        margin-left: auto;
+        border: 1px solid rgba(212, 165, 105, 0.3);
+    }
+    .bot-message {
+        background: rgba(82, 56, 40, 0.08);
+        border-radius: 12px 12px 12px 0;
+        padding: 12px 16px;
+        border: 1px solid rgba(82, 56, 40, 0.12);
+        line-height: 1.6;
+    }
+    .chat-input {
+        padding: 24px;
+        border-top: 1px solid rgba(82, 56, 40, 0.12);
+        background: rgba(249, 240, 214, 0.9);
+    }
+    .form-control {
+        border-radius: 999px;
+        border: 1px solid rgba(82, 56, 40, 0.12);
+        background: rgba(255, 255, 255, 0.8);
+        color: var(--noir);
+        padding: 0.75rem 1.25rem;
+    }
+    .form-control:focus {
+        border-color: var(--gilded);
+        box-shadow: 0 0 0 0.2rem rgba(212, 165, 105, 0.25);
+    }
+    .btn-luxe {
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--gilded) 0%, var(--bronze) 100%);
+        border: none;
+        color: var(--noir);
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+    .btn-luxe:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(212, 165, 105, 0.3);
+    }
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(249, 240, 214, 0.3);
+        border-top: 2px solid var(--gilded);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .bot-message h1, .bot-message h2, .bot-message h3, .bot-message h4, .bot-message h5, .bot-message h6 {
+        margin: 0.5em 0 0.3em 0;
+        color: var(--espresso);
+        font-weight: 700;
+    }
+    .bot-message h1 { font-size: 1.4em; border-bottom: 1px solid rgba(82, 56, 40, 0.15); padding-bottom: 0.3em; }
+    .bot-message h2 { font-size: 1.25em; }
+    .bot-message h3 { font-size: 1.1em; }
+    .bot-message p {
+        margin: 0.5em 0;
+    }
+    .bot-message ul, .bot-message ol {
+        margin: 0.5em 0;
+        padding-left: 1.5em;
+    }
+    .bot-message li {
+        margin: 0.25em 0;
+    }
+    .bot-message code {
+        background: rgba(82, 56, 40, 0.1);
+        padding: 0.15em 0.4em;
+        border-radius: 4px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.9em;
+        color: var(--bronze);
+    }
+    .bot-message pre {
+        background: rgba(31, 22, 17, 0.85);
+        color: var(--champagne);
+        padding: 12px 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 0.8em 0;
+    }
+    .bot-message pre code {
+        background: transparent;
+        padding: 0;
+        color: inherit;
+        font-size: 0.85em;
+    }
+    .bot-message blockquote {
+        border-left: 3px solid var(--gilded);
+        margin: 0.5em 0;
+        padding-left: 1em;
+        color: rgba(82, 56, 40, 0.7);
+        font-style: italic;
+    }
+    .bot-message table {
+        border-collapse: collapse;
+        margin: 0.5em 0;
+        width: 100%;
+    }
+    .bot-message th, .bot-message td {
+        border: 1px solid rgba(82, 56, 40, 0.2);
+        padding: 6px 12px;
+        text-align: left;
+    }
+    .bot-message th {
+        background: rgba(212, 165, 105, 0.2);
+        font-weight: 600;
+    }
+    .bot-message a {
+        color: var(--bronze);
+        text-decoration: underline;
+    }
+    .bot-message a:hover {
+        color: var(--espresso);
+    }
+    .bot-message hr {
+        border: none;
+        border-top: 1px solid rgba(82, 56, 40, 0.15);
+        margin: 1em 0;
+    }
+</style>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    // 聊天历史记录
+    let chatHistory = [];
+    
+    // 固定配置信息
+    const config = {
+        botId: '7626741031869956137',
+        apiKey: 'pat_IpAT8ZCdO52euHnC1QQgCT5oCR80Oo3XZFx8hKgBkHLDMfZW8bRWqdfJ0SrLJtfb',
+        apiUrl: 'https://api.coze.cn/open_api/v2/chat'
+    };
+    
+    // 发送消息
+    async function sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value.trim();
+        
+        if (!message) return;
+        
+        // 添加用户消息
+        addMessage('user', message);
+        messageInput.value = '';
+        
+        // 添加用户消息到上下文历史记录中
+        chatHistory.push({
+            role: "user",
+            type: "query",
+            content: message,
+            content_type: "text"
+        });
+        
+        // 显示加载状态
+        const loadingMessage = addMessage('bot', '<div class="spinner"></div>');
+        
+        try {
+            // 调用Coze API
+            const response = await fetch(config.apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${config.apiKey}`,
+                    'Content-Type': 'application/json',
+                    'Accept': '*/*',
+                    'Host': 'api.coze.cn',
+                    'Connection': 'keep-alive'
+                },
+                body: JSON.stringify({
+                    conversation_id: '123',
+                    bot_id: config.botId,
+                    user: 'user_' + Date.now(), // 生成唯一用户ID
+                    query: message,
+                    stream: false,
+                    chat_history: chatHistory
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API请求失败: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // 移除加载状态
+            loadingMessage.remove();
+            
+            // 处理机器人回复
+            if (data && Array.isArray(data.messages)) {
+                let item = data.messages.find(msg => msg.type === "answer");
+                if (item) {
+                    // 添加机器人的回复到上下文历史记录中
+                    chatHistory.push({
+                        role: item.role,
+                        type: item.type,
+                        content: item.content,
+                        content_type: item.content_type
+                    });
+                    addMessage('bot', item.content);
+                } else {
+                    addMessage('bot', '抱歉，我无法理解你的问题，请尝试换一种方式提问。');
+                }
+            } else {
+                addMessage('bot', '抱歉，我无法理解你的问题，请尝试换一种方式提问。');
+            }
+        } catch (error) {
+            // 移除加载状态
+            loadingMessage.remove();
+            addMessage('bot', `错误: ${error.message}`);
+            console.error('API请求错误:', error);
+        }
+    }
+    
+    // 添加消息到聊天界面
+    function addMessage(role, content) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${role === 'user' ? 'user-message' : 'bot-message'}`;
+        
+        if (role === 'bot' && content.indexOf('<div class="spinner"') === -1) {
+            messageDiv.innerHTML = marked.parse(content);
+        } else {
+            messageDiv.innerHTML = content;
+        }
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return messageDiv;
+    }
+    
+    // 初始化
+    function init() {
+        // 发送按钮点击事件
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
+        
+        // 输入框回车事件
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    }
+    
+    // 页面加载完成后初始化
+    window.onload = init;
+</script>
+{% endblock %}

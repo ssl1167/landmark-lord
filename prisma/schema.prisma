@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Landmark {
+  id                String   @id
+  name              String
+  city              String
+  latitude          Float
+  longitude         Float
+  description       String
+  createdAt         DateTime @map("created_at")
+  checkinRadius     Int      @map("checkin_radius")
+  level             Int
+  guardian          String
+  influenceScore    Int      @map("influence_score")
+  influenceProgress Int      @map("influence_progress")
+  status            String
+  tags              String?
+  amapPoiId         String?  @map("amap_poi_id")
+
+  @@map("landmarks")
+}
