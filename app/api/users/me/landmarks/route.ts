@@ -11,13 +11,18 @@ export async function GET(request: Request) {
     const userId = await getUserIdFromToken(token)
     if (!userId) return fail('无效的token', 401, 401)
     
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || '127.0.0.1',
-      port: Number(process.env.DB_PORT || 3306),
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'landmarks',
-    })
+    let connection;
+    if (process.env.DATABASE_URL) {
+      connection = await mysql.createConnection(process.env.DATABASE_URL);
+    } else {
+      connection = await mysql.createConnection({
+        host: process.env.DB_HOST || '127.0.0.1',
+        port: Number(process.env.DB_PORT || 3306),
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        database: process.env.DB_NAME || 'landmarks',
+      });
+    }
     
     const [rows] = await connection.execute(
       `SELECT l.*, li.score, li.level, li.is_guardian

@@ -17,13 +17,18 @@ export async function GET(request: Request) {
   }
 
   try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || '127.0.0.1',
-      port: Number(process.env.DB_PORT || 3306),
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'landmarks',
-    })
+    let connection;
+    if (process.env.DATABASE_URL) {
+      connection = await mysql.createConnection(process.env.DATABASE_URL);
+    } else {
+      connection = await mysql.createConnection({
+        host: process.env.DB_HOST || '127.0.0.1',
+        port: Number(process.env.DB_PORT || 3306),
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        database: process.env.DB_NAME || 'landmarks',
+      });
+    }
 
     const [rows] = await connection.execute(
       `SELECT b.id, b.content, b.image_url as imageUrl, b.visibility, b.created_at as createdAt,
@@ -39,13 +44,18 @@ export async function GET(request: Request) {
 
     // 获取每个漂流瓶的点赞数和评论数
     const bottlesWithStats = await Promise.all((rows as any[]).map(async (bottle) => {
-      const conn = await mysql.createConnection({
-        host: process.env.DB_HOST || '127.0.0.1',
-        port: Number(process.env.DB_PORT || 3306),
-        user: process.env.DB_USER || 'root',
-        password: process.env.DB_PASSWORD || '',
-        database: process.env.DB_NAME || 'landmarks',
-      })
+      let conn;
+      if (process.env.DATABASE_URL) {
+        conn = await mysql.createConnection(process.env.DATABASE_URL);
+      } else {
+        conn = await mysql.createConnection({
+          host: process.env.DB_HOST || '127.0.0.1',
+          port: Number(process.env.DB_PORT || 3306),
+          user: process.env.DB_USER || 'root',
+          password: process.env.DB_PASSWORD || '',
+          database: process.env.DB_NAME || 'landmarks',
+        });
+      }
       
       const [likes] = await conn.execute(
         'SELECT COUNT(*) as count FROM bottle_likes WHERE bottle_id = ?',
@@ -89,13 +99,18 @@ export async function POST(request: Request) {
       return fail('地标不存在', 404, 404)
     }
 
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || '127.0.0.1',
-      port: Number(process.env.DB_PORT || 3306),
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'landmarks',
-    })
+    let connection;
+    if (process.env.DATABASE_URL) {
+      connection = await mysql.createConnection(process.env.DATABASE_URL);
+    } else {
+      connection = await mysql.createConnection({
+        host: process.env.DB_HOST || '127.0.0.1',
+        port: Number(process.env.DB_PORT || 3306),
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        database: process.env.DB_NAME || 'landmarks',
+      });
+    }
 
     const id = generateId()
     

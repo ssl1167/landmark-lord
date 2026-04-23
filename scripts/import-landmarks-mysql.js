@@ -27,14 +27,15 @@ function arg(name) {
 const RESET = arg("reset") === "true"
 const RADIUS_OVERRIDE = arg("radius") ? Number(arg("radius")) : null
 
+const DATABASE_URL = process.env.DATABASE_URL
 const DB_HOST = process.env.DB_HOST
 const DB_PORT = Number(process.env.DB_PORT || 3306)
 const DB_USER = process.env.DB_USER
 const DB_PASSWORD = process.env.DB_PASSWORD || ""
 const DB_NAME = process.env.DB_NAME
 
-if (!DB_HOST || !DB_USER || !DB_NAME) {
-  console.error("缺少 MySQL 配置：DB_HOST / DB_USER / DB_NAME（请在 .env.local 中配置）")
+if (!DATABASE_URL && (!DB_HOST || !DB_USER || !DB_NAME)) {
+  console.error("缺少 MySQL 配置：DATABASE_URL 或 DB_HOST / DB_USER / DB_NAME（请在 .env.local 中配置）")
   process.exit(1)
 }
 
@@ -73,7 +74,7 @@ async function main() {
     throw new Error("landmarks_cleaned.json 必须是数组")
   }
 
-  const pool = mysql.createPool({
+  const pool = mysql.createPool(DATABASE_URL || {
     host: DB_HOST,
     port: DB_PORT,
     user: DB_USER,

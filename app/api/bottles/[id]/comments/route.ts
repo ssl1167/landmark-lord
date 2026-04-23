@@ -15,13 +15,18 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
   }
 
   try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || '127.0.0.1',
-      port: Number(process.env.DB_PORT || 3306),
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'landmarks',
-    })
+    let connection;
+    if (process.env.DATABASE_URL) {
+      connection = await mysql.createConnection(process.env.DATABASE_URL);
+    } else {
+      connection = await mysql.createConnection({
+        host: process.env.DB_HOST || '127.0.0.1',
+        port: Number(process.env.DB_PORT || 3306),
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        database: process.env.DB_NAME || 'landmarks',
+      });
+    }
 
     const [rows] = await connection.execute(
       `SELECT c.id, c.content, c.created_at as createdAt,
@@ -54,13 +59,18 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return fail('缺少必要参数', 400, 400)
     }
 
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || '127.0.0.1',
-      port: Number(process.env.DB_PORT || 3306),
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'landmarks',
-    })
+    let connection;
+    if (process.env.DATABASE_URL) {
+      connection = await mysql.createConnection(process.env.DATABASE_URL);
+    } else {
+      connection = await mysql.createConnection({
+        host: process.env.DB_HOST || '127.0.0.1',
+        port: Number(process.env.DB_PORT || 3306),
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        database: process.env.DB_NAME || 'landmarks',
+      });
+    }
 
     // 验证漂流瓶是否存在
     const [bottleCheck] = await connection.execute(
