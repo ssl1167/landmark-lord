@@ -29,9 +29,13 @@ export function AuthPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(mode === "login" ? { email, password } : { username, email, password }),
       })
-      const json = await res.json()
+      const raw = await res.text()
+      const json = raw ? JSON.parse(raw) : null
       if (!res.ok || json?.code !== 0) {
         throw new Error(json?.message || "认证失败")
+      }
+      if (!json?.data?.user || !json?.data?.token) {
+        throw new Error("认证接口返回格式异常")
       }
       login({ user: json.data.user, token: json.data.token })
     } catch (e) {

@@ -23,7 +23,7 @@ interface BottleCardProps {
 }
 
 export function BottleCard({ id, content, author, likes: initialLikes, comments, hasImage }: BottleCardProps) {
-  const { user } = useApp()
+  const { user, token } = useApp()
   const [liked, setLiked] = useState(false)
   const [likes, setLikes] = useState(initialLikes)
   const [showComments, setShowComments] = useState(false)
@@ -67,15 +67,17 @@ export function BottleCard({ id, content, author, likes: initialLikes, comments,
 
   // 提交评论
   const handleSubmitComment = async () => {
-    if (!user || !commentContent.trim()) return
+    if (!user || !token || !commentContent.trim()) return
 
     setIsSubmittingComment(true)
     try {
       const res = await fetch(`/api/bottles/${id}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
-          userId: user.id,
           content: commentContent.trim()
         })
       })

@@ -33,7 +33,7 @@ interface LandmarkDetailPanelProps {
 }
 
 export function LandmarkDetailPanel({ selectedLandmark }: LandmarkDetailPanelProps) {
-  const { user } = useApp()
+  const { user, token } = useApp()
   const [activeTab, setActiveTab] = useState<PanelTab>("details")
   const [checkinState, setCheckinState] = useState<"too-far" | "available" | "completed">("available")
   const [landmark, setLandmark] = useState<LandmarkDetail | null>(null)
@@ -200,16 +200,18 @@ export function LandmarkDetailPanel({ selectedLandmark }: LandmarkDetailPanelPro
 
   // 投递漂流瓶
   const handleSubmitBottle = async () => {
-    if (!user || !landmark || !bottleContent.trim()) return
+    if (!user || !token || !landmark || !bottleContent.trim()) return
     
     setIsSubmittingBottle(true)
     try {
       const res = await fetch('/api/bottles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           landmarkId: landmark.id,
-          userId: user.id,
           content: bottleContent.trim(),
           imageUrl: bottleImageUrl || null,
           visibility: 'public',
@@ -396,17 +398,19 @@ export function LandmarkDetailPanel({ selectedLandmark }: LandmarkDetailPanelPro
             <CheckinButton
               state={checkinState}
               onCheckin={async () => {
-                if (!navigator.geolocation || !landmark || !user) return
+                if (!navigator.geolocation || !landmark || !user || !token) return
                 navigator.geolocation.getCurrentPosition((position) => {
                   void (async () => {
                     try {
                       const [gcjLng, gcjLat] = wgs84ToGcj02(position.coords.longitude, position.coords.latitude)
                       const res = await fetch('/api/checkins', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                          'Content-Type': 'application/json',
+                          Authorization: `Bearer ${token}`,
+                        },
                         body: JSON.stringify({
                           landmarkId: landmark.id,
-                          userId: user.id,
                           latitude: gcjLat,
                           longitude: gcjLng,
                         }),
